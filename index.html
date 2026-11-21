@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRESHORA - Branded Grocery Self-Ordering Kiosk</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          },
+          animation: {
+            fadeIn: 'fadeIn 0.2s ease-out forwards',
+            scaleUp: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            slideUp: 'slideUp 0.3s ease-out forwards'
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            scaleUp: {
+              '0%': { opacity: '0', transform: 'scale(0.95)' },
+              '100%': { opacity: '1', transform: 'scale(1)' }
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+const CATEGORIES = [
+  { id: 'all', name: 'All Products', icon: 'Sparkles' },
+  { id: 'dairy', name: 'Dairy & Spreads', icon: 'Milk' },
+  { id: 'breakfast', name: 'Breakfast & Cereals', icon: 'Sun' },
+  { id: 'beverages', name: 'Beverages & Coffee', icon: 'Coffee' },
+  { id: 'snacks', name: 'Snacks & Chocolates', icon: 'Cookie' },
+  { id: 'pantry', name: 'Pantry & Gourmet', icon: 'ShoppingBag' },
+  { id: 'organic', name: 'Organic & Health', icon: 'Leaf' }
+];
+
+const PRODUCTS = [
+  {
+    id: 'prod-1',
+    name: "Real Almond & Honey Corn Flakes",
+    brand: "Kellogg's",
+    category: 'breakfast',
+    price: 345,
+    originalPrice: 395,
+    weight: '750g',
+    rating: 4.8,
+    reviewsCount: 342,
+    badge: 'Bestseller',
+    badgeColor: 'bg-emerald-500',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 28,
+    image: 'https://images.unsplash.com/photo-1521483451569-e33803c0330c?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Crispy golden flakes of corn enriched with crunchy sliced California almonds and pure natural honey. Fortified with essential vitamins and iron for a nutritious and energetic start to your morning.",
+      ingredients: "Corn Grits (64%), Sugar, Sliced Almonds (8.5%), Honey (4.2%), Malt Extract, Iodized Salt, Vitamins (A, B1, B2, B3, B6, B12, C, Folate) & Mineral (Iron).",
+      shelfLife: "9 Months from packaging",
+      countryOfOrigin: "India",
+      storageInstructions: "Store in a cool, dry, and hygienic place. After opening, transfer contents into an airtight container to preserve crunchiness.",
+      fssaiLicense: "10013022002031",
+      manufacturer: "Kellogg India Pvt Ltd, Plot L2 & L3, Taloja MIDC, Navi Mumbai",
+      nutrition: {
+        servingSize: '30g with 120ml skimmed milk',
+        energy: '118 kcal',
+        protein: '2.4 g',
+        carbs: '25.2 g',
+        sugars: '7.8 g',
+        fat: '1.2 g',
+        sodium: '140 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-2',
+    name: "100% Pure Rolled Oats",
+    brand: "Quaker",
+    category: 'breakfast',
+    price: 189,
+    originalPrice: 220,
+    weight: '1 kg',
+    rating: 4.9,
+    reviewsCount: 512,
+    badge: 'High Fiber',
+    badgeColor: 'bg-blue-600',
+    dietary: '100% Vegan',
+    inStock: true,
+    stockCount: 45,
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "100% whole grain rolled oats packed with soluble dietary fiber (Beta-Glucan) that helps reduce cholesterol and promotes healthy heart function. Cook into wholesome porridge or blend into healthy smoothies.",
+      ingredients: "100% Wholegrain Rolled Oats. Contains natural plant-based antioxidants and complex carbohydrates.",
+      shelfLife: "12 Months from packaging",
+      countryOfOrigin: "Australia",
+      storageInstructions: "Keep in a cool, dry area away from direct sunlight. Seal zipper tightly after each use.",
+      fssaiLicense: "10014011000892",
+      manufacturer: "PepsiCo India Holdings Pvt Ltd, DLF Cyber City, Gurugram",
+      nutrition: {
+        servingSize: '40g dry',
+        energy: '155 kcal',
+        protein: '5.2 g',
+        carbs: '27.0 g',
+        sugars: '0.4 g',
+        fat: '2.8 g',
+        sodium: '2 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-3',
+    name: "Pasteurised Pure Salted Butter",
+    brand: "Amul",
+    category: 'dairy',
+    price: 275,
+    originalPrice: 285,
+    weight: '500g',
+    rating: 4.9,
+    reviewsCount: 1240,
+    badge: 'Fresh Stock',
+    badgeColor: 'bg-amber-500',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 60,
+    image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "India's favorite butter, crafted from the freshest cow and buffalo cream with a classic savory pinch of salt. Perfect for breakfast toasts, cooking, parathas, baking, and rich gravies.",
+      ingredients: "Butter (Milk Fat 80%), Common Salt, Annatto extract (Natural Coloring).",
+      shelfLife: "12 Months at or below 4°C",
+      countryOfOrigin: "India",
+      storageInstructions: "Keep refrigerated at 4°C or below. Do not freeze.",
+      fssaiLicense: "10012021000071",
+      manufacturer: "Gujarat Co-operative Milk Marketing Federation Ltd, Anand, Gujarat",
+      nutrition: {
+        servingSize: '10g',
+        energy: '72 kcal',
+        protein: '0.1 g',
+        carbs: '0.0 g',
+        sugars: '0.0 g',
+        fat: '8.0 g',
+        sodium: '82 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-4',
+    name: "Hazelnut Spread with Cocoa",
+    brand: "Nutella",
+    category: 'dairy',
+    price: 499,
+    originalPrice: 560,
+    weight: '750g',
+    rating: 4.9,
+    reviewsCount: 890,
+    badge: 'Family Size',
+    badgeColor: 'bg-rose-500',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 19,
+    image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Iconic Italian hazelnut spread blending premium roasted hazelnuts, skimmed milk, and fine cocoa for a signature velvety texture. Free from artificial colorings and preservatives.",
+      ingredients: "Sugar, Palm Oil, Hazelnuts (13%), Skimmed Milk Powder (8.7%), Fat-Reduced Cocoa Powder (7.4%), Emulsifier: Lecithins (Soya), Vanillin.",
+      shelfLife: "12 Months",
+      countryOfOrigin: "Italy",
+      storageInstructions: "Store at room temperature between 18°C and 24°C. Do not refrigerate.",
+      fssaiLicense: "10012022000149",
+      manufacturer: "Ferrero SpA, Alba (CN), Italy / Ferrero India Pvt Ltd",
+      nutrition: {
+        servingSize: '15g (1 Tablespoon)',
+        energy: '81 kcal',
+        protein: '0.9 g',
+        carbs: '8.6 g',
+        sugars: '8.4 g',
+        fat: '4.7 g',
+        sodium: '6 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-5',
+    name: "Collezione Spaghetti No. 5",
+    brand: "Barilla",
+    category: 'pantry',
+    price: 240,
+    originalPrice: 280,
+    weight: '500g',
+    rating: 4.7,
+    reviewsCount: 289,
+    badge: 'Imported',
+    badgeColor: 'bg-purple-600',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 34,
+    image: 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Authentic Italian bronze-cut durum wheat pasta that cooks to the classic 'al dente' perfection in 9 minutes. The subtly textured surface clings deliciously to sauces.",
+      ingredients: "100% Durum Wheat Semolina, Purified Water. Non-GMO Project Verified.",
+      shelfLife: "24 Months from manufacturing",
+      countryOfOrigin: "Italy",
+      storageInstructions: "Store in a cool, dry cupboard away from strong odors.",
+      fssaiLicense: "10014022002758",
+      manufacturer: "Barilla G. e R. Fratelli, Parma, Italy",
+      nutrition: {
+        servingSize: '85g dry pasta',
+        energy: '300 kcal',
+        protein: '11.0 g',
+        carbs: '62.0 g',
+        sugars: '2.0 g',
+        fat: '1.5 g',
+        sodium: '1 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-6',
+    name: "Extra Virgin Olive Oil Cold Pressed",
+    brand: "Bertolli",
+    category: 'pantry',
+    price: 980,
+    originalPrice: 1150,
+    weight: '1 Litre',
+    rating: 4.8,
+    reviewsCount: 410,
+    badge: 'Cold Pressed',
+    badgeColor: 'bg-emerald-600',
+    dietary: '100% Vegan',
+    inStock: true,
+    stockCount: 15,
+    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "First cold extraction of Mediterranean hand-picked olives, delivering a well-balanced fruity aroma with subtle peppery notes. Rich in heart-healthy monounsaturated fats and polyphenols.",
+      ingredients: "100% Extra Virgin Olive Oil obtained solely by mechanical means.",
+      shelfLife: "18 Months",
+      countryOfOrigin: "Spain / Italy",
+      storageInstructions: "Store tightly capped in a cool, dark place away from heat and light.",
+      fssaiLicense: "10015022003819",
+      manufacturer: "Deoleo S.A., Ctra. N-IV, Alcolea (Córdoba), Spain",
+      nutrition: {
+        servingSize: '15ml (1 Tbsp)',
+        energy: '124 kcal',
+        protein: '0.0 g',
+        carbs: '0.0 g',
+        sugars: '0.0 g',
+        fat: '14.0 g',
+        sodium: '0 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-7',
+    name: "100% Pure Valencia Orange Juice",
+    brand: "Tropicana",
+    category: 'beverages',
+    price: 135,
+    originalPrice: 155,
+    weight: '1 Litre',
+    rating: 4.6,
+    reviewsCount: 380,
+    badge: 'No Added Sugar',
+    badgeColor: 'bg-orange-500',
+    dietary: '100% Vegan',
+    inStock: true,
+    stockCount: 40,
+    image: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Squeezed from sunshine-ripened sweet Valencia oranges with no added sugar, artificial preservatives, or artificial colors. One 200ml glass provides your 100% daily Vitamin C requirement.",
+      ingredients: "Reconstituted Orange Juice (Orange Juice Concentrate 100%), Vitamin C (Ascorbic Acid).",
+      shelfLife: "6 Months",
+      countryOfOrigin: "India",
+      storageInstructions: "Store unopened in a clean, cool place. Refrigerate after opening and consume within 5 days.",
+      fssaiLicense: "10012063000064",
+      manufacturer: "PepsiCo India Holdings Pvt Ltd, Sangrur, Punjab",
+      nutrition: {
+        servingSize: '200ml',
+        energy: '90 kcal',
+        protein: '1.4 g',
+        carbs: '21.0 g',
+        sugars: '19.0 g (Natural)',
+        fat: '0.2 g',
+        sodium: '20 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-8',
+    name: "Gold Blend Arabica Instant Coffee",
+    brand: "Nescafé",
+    category: 'beverages',
+    price: 495,
+    originalPrice: 540,
+    weight: '100g Jar',
+    rating: 4.9,
+    reviewsCount: 620,
+    badge: 'Premium Roast',
+    badgeColor: 'bg-amber-700',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 25,
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Expertly crafted premium roast instant coffee using mountain-grown Arabica beans ground 10 times finer to unlock profound aromatic richness and smooth golden crema.",
+      ingredients: "100% Pure Freeze-Dried Soluble Coffee with Finely Ground Roasted Coffee Beans.",
+      shelfLife: "24 Months",
+      countryOfOrigin: "South Korea / Switzerland",
+      storageInstructions: "Close tightly with inner foil intact. Store in a dry place to prevent moisture absorption.",
+      fssaiLicense: "10012011000168",
+      manufacturer: "Nestlé S.A., Vevey, Switzerland",
+      nutrition: {
+        servingSize: '1.8g in 150ml hot water',
+        energy: '2 kcal',
+        protein: '0.2 g',
+        carbs: '0.3 g',
+        sugars: '0.0 g',
+        fat: '0.0 g',
+        sodium: '1 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-9',
+    name: "English Breakfast Black Tea",
+    brand: "Twinings",
+    category: 'beverages',
+    price: 460,
+    originalPrice: 510,
+    weight: '100 Tea Bags (200g)',
+    rating: 4.8,
+    reviewsCount: 310,
+    badge: 'Classic Heritage',
+    badgeColor: 'bg-indigo-600',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 30,
+    image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "A world-renowned robust blend of fine black teas sourced from Assam, Ceylon, and Kenya. Full-bodied, brisk, and invigorating, pairs splendidly with milk or a squeeze of lemon.",
+      ingredients: "100% Pure Selected Black Tea leaves.",
+      shelfLife: "36 Months",
+      countryOfOrigin: "United Kingdom / Blended in Poland",
+      storageInstructions: "Store in an airtight caddy away from moisture and direct sunlight.",
+      fssaiLicense: "10013011001289",
+      manufacturer: "R. Twining and Company Limited, London, UK",
+      nutrition: {
+        servingSize: '1 teabag brewed in 200ml water',
+        energy: '1 kcal',
+        protein: '0.1 g',
+        carbs: '0.2 g',
+        sugars: '0.0 g',
+        fat: '0.0 g',
+        sodium: '0 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-10',
+    name: "Classic Salted Crisps Jumbo Pack",
+    brand: "Lay's",
+    category: 'snacks',
+    price: 50,
+    originalPrice: 60,
+    weight: '180g',
+    rating: 4.7,
+    reviewsCount: 1540,
+    badge: 'Popular',
+    badgeColor: 'bg-yellow-500',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 80,
+    image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Crispy thin slices of specially cultivated golden potatoes, cooked to crispy perfection and delicately seasoned with pure rock salt. The timeless snack for every gathering.",
+      ingredients: "Potato (89%), Edible Vegetable Oil (Palmolein, Rice Bran), Iodized Salt (1.5%).",
+      shelfLife: "4 Months",
+      countryOfOrigin: "India",
+      storageInstructions: "Store away from heat and direct sunlight. Consume immediately once opened.",
+      fssaiLicense: "10014064000435",
+      manufacturer: "PepsiCo India Holdings Pvt Ltd, Channo, Punjab",
+      nutrition: {
+        servingSize: '30g',
+        energy: '164 kcal',
+        protein: '2.1 g',
+        carbs: '15.6 g',
+        sugars: '0.5 g',
+        fat: '10.4 g',
+        sodium: '190 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-11',
+    name: "Dairy Milk Silk Roasted Almond",
+    brand: "Cadbury",
+    category: 'snacks',
+    price: 175,
+    originalPrice: 195,
+    weight: '143g',
+    rating: 4.9,
+    reviewsCount: 940,
+    badge: 'Top Pick',
+    badgeColor: 'bg-purple-700',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 50,
+    image: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Luxuriously smooth and creamy milk chocolate bar generously studded with toasted crunchy whole California almonds. Delivers an irresistible melt-in-mouth indulgence.",
+      ingredients: "Sugar, Milk Solids (20%), Cocoa Butter, Roasted Almonds (16%), Cocoa Solids, Emulsifiers (442, 476), Natural Vanilla Flavors.",
+      shelfLife: "9 Months",
+      countryOfOrigin: "India",
+      storageInstructions: "Store in a cool, hygienic and dry place (15°C - 20°C).",
+      fssaiLicense: "10014022002711",
+      manufacturer: "Mondelez India Foods Pvt Ltd, Induri, Pune",
+      nutrition: {
+        servingSize: '20g',
+        energy: '112 kcal',
+        protein: '2.2 g',
+        carbs: '11.0 g',
+        sugars: '9.8 g',
+        fat: '6.8 g',
+        sodium: '28 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-12',
+    name: "Raw Wildflower Himalayan Honey",
+    brand: "24 Mantra Organic",
+    category: 'organic',
+    price: 360,
+    originalPrice: 420,
+    weight: '500g',
+    rating: 4.8,
+    reviewsCount: 260,
+    badge: '100% Certified Organic',
+    badgeColor: 'bg-emerald-600',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 22,
+    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Pure, unprocessed, unpasteurized honey harvested straight from pristine high-altitude Himalayan wildflower apiaries. Free from C3/C4 inverted sugar adulteration, antibiotics, or synthetic syrups.",
+      ingredients: "100% Certified Organic Natural Honey.",
+      shelfLife: "24 Months",
+      countryOfOrigin: "India (Himalayan Range)",
+      storageInstructions: "Store at room temperature. Natural honey may crystallize over time; place the jar in warm water to liquefy.",
+      fssaiLicense: "10012047000143",
+      manufacturer: "Sresta Natural Bioproducts Pvt Ltd, Hyderabad, Telangana",
+      nutrition: {
+        servingSize: '15g (1 Tbsp)',
+        energy: '48 kcal',
+        protein: '0.1 g',
+        carbs: '12.0 g',
+        sugars: '12.0 g',
+        fat: '0.0 g',
+        sodium: '1 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-13',
+    name: "Classic Tomato Ketchup Glass Bottle",
+    brand: "Heinz",
+    category: 'pantry',
+    price: 160,
+    originalPrice: 185,
+    weight: '500g',
+    rating: 4.8,
+    reviewsCount: 780,
+    badge: 'No Preservatives',
+    badgeColor: 'bg-red-600',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 35,
+    image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Thick and rich tomato ketchup made with sun-ripened Heinz vine tomatoes and an exclusive proprietary blend of spices. Free from artificial thickeners or corn starch.",
+      ingredients: "Tomato Concentrate (from Red Ripe Tomatoes), Distilled Vinegar, High Fructose Corn Syrup, Salt, Spice, Onion Powder, Natural Flavoring.",
+      shelfLife: "15 Months",
+      countryOfOrigin: "United States / Heinz India",
+      storageInstructions: "Shake well before use. For best quality, refrigerate after opening.",
+      fssaiLicense: "10014022002534",
+      manufacturer: "Kraft Heinz Food Company, Pittsburgh, PA",
+      nutrition: {
+        servingSize: '17g (1 Tbsp)',
+        energy: '20 kcal',
+        protein: '0.2 g',
+        carbs: '5.0 g',
+        sugars: '4.0 g',
+        fat: '0.0 g',
+        sodium: '160 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-14',
+    name: "Tulsi Green Tea Classic (Stress Relieving)",
+    brand: "Organic India",
+    category: 'organic',
+    price: 260,
+    originalPrice: 299,
+    weight: '25 Infusion Bags',
+    rating: 4.7,
+    reviewsCount: 415,
+    badge: 'Ayurvedic Blend',
+    badgeColor: 'bg-teal-600',
+    dietary: '100% Vegan',
+    inStock: true,
+    stockCount: 26,
+    image: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Synergistic blend of three sacred Holy Basil varieties (Rama, Krishna, and Vana Tulsi) coupled with tender whole organic green tea leaves. Rich in phytonutrients and adaptogens.",
+      ingredients: "Krishna Tulsi (21.6%), Rama Tulsi (21.6%), Vana Tulsi (21.6%), Organic Camellia Sinensis Green Tea (35.2%).",
+      shelfLife: "24 Months",
+      countryOfOrigin: "India",
+      storageInstructions: "Store in a cool dry place away from direct sunlight.",
+      fssaiLicense: "10014051000865",
+      manufacturer: "Organic India Pvt Ltd, Barabanki, Uttar Pradesh",
+      nutrition: {
+        servingSize: '1 infusion bag in 120ml boiled water',
+        energy: '0.8 kcal',
+        protein: '0.08 g',
+        carbs: '0.12 g',
+        sugars: '0.0 g',
+        fat: '0.0 g',
+        sodium: '0 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-15',
+    name: "Rozana Gold Traditional Basmati Rice",
+    brand: "Daawat",
+    category: 'pantry',
+    price: 480,
+    originalPrice: 560,
+    weight: '5 kg',
+    rating: 4.8,
+    reviewsCount: 670,
+    badge: 'Aged Grains',
+    badgeColor: 'bg-emerald-700',
+    dietary: 'Vegetarian',
+    inStock: true,
+    stockCount: 40,
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Naturally aged long-grain Basmati rice known for its non-sticky texture, rich aroma, and elongation when cooked. Ideal for everyday gourmet meals, pulao, and biryani.",
+      ingredients: "100% Himalayan Basmati Rice aged for over 12 months.",
+      shelfLife: "24 Months",
+      countryOfOrigin: "India",
+      storageInstructions: "Store in an airtight container in a cool, moisture-free environment.",
+      fssaiLicense: "10012064000100",
+      manufacturer: "LT Foods Ltd, Sonepat, Haryana",
+      nutrition: {
+        servingSize: '50g uncooked',
+        energy: '175 kcal',
+        protein: '4.1 g',
+        carbs: '38.5 g',
+        sugars: '0.1 g',
+        fat: '0.3 g',
+        sodium: '3 mg'
+      }
+    }
+  },
+  {
+    id: 'prod-16',
+    name: "Unsweetened Almond Milk",
+    brand: "Blue Diamond",
+    category: 'organic',
+    price: 295,
+    originalPrice: 340,
+    weight: '1 Litre',
+    rating: 4.7,
+    reviewsCount: 195,
+    badge: 'Dairy Free',
+    badgeColor: 'bg-cyan-600',
+    dietary: '100% Vegan',
+    inStock: true,
+    stockCount: 18,
+    image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
+    specifications: {
+      description: "Deliciously creamy plant-based milk made from non-GMO California almonds with 50% more calcium than dairy milk. Zero cholesterol, zero lactose, and only 30 calories per serving.",
+      ingredients: "Almondmilk (Filtered Water, Almonds 2.5%), Calcium Carbonate, Sea Salt, Potassium Citrate, Sunflower Lecithin, Gellan Gum, Vitamin A Palmitate, Vitamin D2, D-Alpha-Tocopherol (Vitamin E).",
+      shelfLife: "12 Months unopened",
+      countryOfOrigin: "United States",
+      storageInstructions: "Refrigerate after opening and consume within 7-10 days. Do not freeze.",
+      fssaiLicense: "10016022004523",
+      manufacturer: "Blue Diamond Growers, Sacramento, California",
+      nutrition: {
+        servingSize: '240ml',
+        energy: '30 kcal',
+        protein: '1.0 g',
+        carbs: '1.0 g',
+        sugars: '0.0 g',
+        fat: '2.5 g',
+        sodium: '170 mg'
+      }
+    }
+  }
+];
+
+    // --- MAIN REACT APPLICATION ---
+    function FreshoraApp() {
+      // Filter & Navigation States
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('all');
+      const [sortBy, setSortBy] = useState('popular');
+      const [selectedDietary, setSelectedDietary] = useState('all');
+
+      // Cart State: { [productId]: quantity }
+      const [cart, setCart] = useState({});
+      const [isCartOpen, setIsCartOpen] = useState(false);
+
+      // Product Specs Modal State: product object or null
+      const [activeProductForSpecs, setActiveProductForSpecs] = useState(null);
+
+      // Mandatory Customer Info for SMS Bill
+      const [customerName, setCustomerName] = useState('');
+      const [customerPhone, setCustomerPhone] = useState('');
+      const [customerAddress, setCustomerAddress] = useState('');
+      const [includeBag, setIncludeBag] = useState(true);
+      const [formErrors, setFormErrors] = useState({});
+      const [formTouched, setFormTouched] = useState({});
+
+      // Order Placement / Receipt Modal State
+      const [placedOrder, setPlacedOrder] = useState(null);
+      const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+      // Toast notification
+      const [toastMessage, setToastMessage] = useState(null);
+
+      const triggerToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3000);
+      };
+
+      // Cart Functions
+      const addToCart = (product, e) => {
+        if (e) e.stopPropagation();
+        setCart(prev => ({
+          ...prev,
+          [product.id]: (prev[product.id] || 0) + 1
+        }));
+        triggerToast(`Added ${product.brand} ${product.name} to cart!`);
+      };
+
+      const updateQuantity = (productId, delta, e) => {
+        if (e) e.stopPropagation();
+        setCart(prev => {
+          const current = prev[productId] || 0;
+          const next = current + delta;
+          if (next <= 0) {
+            const copy = { ...prev };
+            delete copy[productId];
+            return copy;
+          }
+          return { ...prev, [productId]: next };
+        });
+      };
+
+      const removeFromCart = (productId) => {
+        setCart(prev => {
+          const copy = { ...prev };
+          delete copy[productId];
+          return copy;
+        });
+        triggerToast('Item removed from cart');
+      };
+
+      const clearCart = () => {
+        setCart({});
+        triggerToast('Cart cleared');
+      };
+
+      // Derived Cart Values
+      const cartItems = useMemo(() => {
+        return Object.entries(cart).map(([id, qty]) => {
+          const prod = PRODUCTS.find(p => p.id === id);
+          return { ...prod, quantity: qty };
+        }).filter(item => item && item.id);
+      }, [cart]);
+
+      const totalItemsCount = useMemo(() => {
+        return Object.values(cart).reduce((sum, q) => sum + q, 0);
+      }, [cart]);
+
+      const subtotal = useMemo(() => {
+        return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      }, [cartItems]);
+
+      const totalSavings = useMemo(() => {
+        return cartItems.reduce((sum, item) => {
+          const diff = (item.originalPrice || item.price) - item.price;
+          return sum + (diff * item.quantity);
+        }, 0);
+      }, [cartItems]);
+
+      const bagFee = includeBag && totalItemsCount > 0 ? 10 : 0;
+      const finalTotal = subtotal + bagFee;
+
+      // Filtered & Sorted Products
+      const filteredProducts = useMemo(() => {
+        return PRODUCTS.filter(prod => {
+          if (selectedCategory !== 'all' && prod.category !== selectedCategory) {
+            return false;
+          }
+          if (selectedDietary !== 'all') {
+            if (selectedDietary === 'Vegetarian' && !prod.dietary.includes('Vegetarian') && !prod.dietary.includes('Vegan')) return false;
+            if (selectedDietary === 'Vegan' && !prod.dietary.includes('Vegan')) return false;
+          }
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            const matchName = prod.name.toLowerCase().includes(q);
+            const matchBrand = prod.brand.toLowerCase().includes(q);
+            const matchCategory = prod.category.toLowerCase().includes(q);
+            if (!matchName && !matchBrand && !matchCategory) return false;
+          }
+          return true;
+        }).sort((a, b) => {
+          if (sortBy === 'price-low') return a.price - b.price;
+          if (sortBy === 'price-high') return b.price - a.price;
+          if (sortBy === 'rating') return b.rating - a.rating;
+          return b.reviewsCount - a.reviewsCount;
+        });
+      }, [selectedCategory, selectedDietary, searchQuery, sortBy]);
+
+      // Mandatory Form Validation
+      const validateForm = () => {
+        const errors = {};
+        if (!customerName.trim()) {
+          errors.customerName = 'Customer name is required';
+        }
+        const cleanPhone = customerPhone.replace(/\D/g, '');
+        if (!cleanPhone) {
+          errors.customerPhone = 'Mobile number is required for SMS bill';
+        } else if (cleanPhone.length !== 10) {
+          errors.customerPhone = 'Please enter a valid 10-digit mobile number';
+        }
+        if (!customerAddress.trim()) {
+          errors.customerAddress = 'Address is required for your bill record';
+        }
+        return errors;
+      };
+
+      const handleBlur = (field) => {
+        setFormTouched(prev => ({ ...prev, [field]: true }));
+        const errors = validateForm();
+        setFormErrors(errors);
+      };
+
+      // Place Order Handler
+      const handlePlaceOrder = (e) => {
+        if (e) e.preventDefault();
+        setFormTouched({ customerName: true, customerPhone: true, customerAddress: true });
+        const errors = validateForm();
+        setFormErrors(errors);
+
+        if (Object.keys(errors).length > 0) {
+          triggerToast('⚠️ Please fill all mandatory fields (Name, Phone No, Address) to receive your SMS bill.');
+          return;
+        }
+
+        if (totalItemsCount === 0) return;
+
+        setIsPlacingOrder(true);
+
+        setTimeout(() => {
+          const orderNum = 'FR-' + Math.floor(1000 + Math.random() * 9000);
+          const orderDetails = {
+            orderNumber: orderNum,
+            kioskId: 'Kiosk Station #04 - In-Store Lane',
+            items: [...cartItems],
+            subtotal,
+            bagFee,
+            total: finalTotal,
+            totalSavings,
+            customerName: customerName.trim(),
+            customerPhone: customerPhone.trim(),
+            customerAddress: customerAddress.trim(),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            counter: 'Counter 2 (Express Pick & Bag)'
+          };
+
+          setPlacedOrder(orderDetails);
+          setIsPlacingOrder(false);
+          setIsCartOpen(false);
+          setCart({});
+          setFormErrors({});
+          setFormTouched({});
+          triggerToast(`Order ${orderNum} confirmed! Mandatory SMS bill dispatched to +91 ${customerPhone.trim()}`);
+        }, 1100);
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col bg-slate-50 relative selection:bg-emerald-500 selection:text-white">
+          {/* TOAST NOTIFICATION */}
+          {toastMessage && (
+            <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-2.5 border border-slate-700 animate-slideUp text-xs font-bold">
+              <span className="text-emerald-400 text-base">🔔</span>
+              <p>{toastMessage}</p>
+            </div>
+          )}
+
+          {/* NAVBAR */}
+          <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+              {/* Brand Logo */}
+              <div
+                className="flex items-center space-x-3 cursor-pointer"
+                onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
+              >
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-emerald-500/20">
+                  F
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-2xl font-black tracking-tight text-slate-900">FRESH<span className="text-emerald-600">ORA</span></span>
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded uppercase">GROCERY</span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">Branded Grocery Self-Service Kiosk</p>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex-1 max-w-xl mx-2">
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-base">
+                    🔍
+                  </span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search branded groceries (Kellogg's, Amul, Barilla, Quaker)..."
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-sm text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Cart Icon & Checkout Trigger */}
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(true)}
+                  className={`relative flex items-center space-x-2.5 px-4 py-2.5 rounded-xl font-bold transition shadow-sm ${
+                    totalItemsCount > 0
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 ring-2 ring-emerald-500/30'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="Click to view Cart & Place Order (SMS Bill)"
+                >
+                  <span className="text-lg">🛒</span>
+                  <div className="text-left hidden sm:block">
+                    <span className="text-xs block font-semibold leading-none">Your Cart</span>
+                    <span className="text-sm font-extrabold leading-tight">₹{subtotal.toLocaleString()}</span>
+                  </div>
+                  {totalItemsCount > 0 && (
+                    <span className="ml-1 bg-amber-400 text-slate-900 text-xs font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                      {totalItemsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Category Navigation & Quick Filters */}
+            <div className="border-t border-slate-100 bg-white">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 overflow-x-auto custom-scrollbar">
+                <div className="flex items-center space-x-2">
+                  {CATEGORIES.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+                        selectedCategory === cat.id
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center space-x-2 pl-4 border-l border-slate-200 text-xs shrink-0">
+                  <select
+                    value={selectedDietary}
+                    onChange={(e) => setSelectedDietary(e.target.value)}
+                    className="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg border-0 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="all">All Diets</option>
+                    <option value="Vegetarian">🌱 Vegetarian</option>
+                    <option value="Vegan">🥑 Vegan Only</option>
+                  </select>
+
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg border-0 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="popular">Popularity</option>
+                    <option value="rating">Top Rated</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* IN-STORE ANNOUNCEMENT STRIP */}
+          <section className="bg-gradient-to-r from-emerald-800 via-teal-900 to-emerald-950 text-white py-6 px-4 sm:px-6 lg:px-8 shadow-inner">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center md:text-left">
+                <div className="inline-flex items-center space-x-2 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-400/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span>FRESHORA In-Store Self-Ordering Terminal #04</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight pt-1">
+                  Welcome to FRESHORA • 100% Genuine Branded Groceries
+                </h1>
+                <p className="text-xs text-emerald-200/90 max-w-2xl leading-relaxed">
+                  Select items from our shelves below, tap on any product to inspect specifications, add them to your cart, and enter your details to receive your <strong>SMS bill mandatorily</strong> upon placing the order.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3 text-xs shrink-0">
+                <div className="bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 flex items-center space-x-2">
+                  <span className="text-emerald-400 text-base">🛡️</span>
+                  <div>
+                    <p className="font-bold">Original Brands</p>
+                    <p className="text-[10px] text-emerald-200">Kellogg's, Amul, Tata...</p>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 flex items-center space-x-2">
+                  <span className="text-emerald-400 text-base">📱</span>
+                  <div>
+                    <p className="font-bold">Mandatory SMS Bill</p>
+                    <p className="text-[10px] text-emerald-200">Sent instantly on order</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* MAIN PRODUCT CATALOG GRID */}
+          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 flex items-center space-x-2">
+                  <span>
+                    {selectedCategory === 'all' ? 'All Grocery Products' : CATEGORIES.find(c => c.id === selectedCategory)?.name}
+                  </span>
+                  <span className="text-xs bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">
+                    {filteredProducts.length} items
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  💡 <strong>Tip:</strong> Click on any product card to open its specifications popup (ingredients, nutrition facts, shelf life).
+                </p>
+              </div>
+
+              {searchQuery && (
+                <div className="text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                  <span>Searching for: <strong>"{searchQuery}"</strong></span>
+                  <button onClick={() => setSearchQuery('')} className="text-emerald-600 font-bold hover:underline">Clear</button>
+                </div>
+              )}
+            </div>
+
+            {/* Empty Search State */}
+            {filteredProducts.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <span className="text-5xl mb-4 block">🔍</span>
+                <h3 className="text-lg font-bold text-slate-800">No matching branded products found</h3>
+                <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+                  Try resetting filters or searching for popular brands like Kellogg's, Amul, Quaker, or Barilla.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedCategory('all'); setSearchQuery(''); setSelectedDietary('all'); }}
+                  className="mt-4 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition"
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filteredProducts.map(product => {
+                  const qty = cart[product.id] || 0;
+                  const discountPercent = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+
+                  return (
+                    <div
+                      key={product.id}
+                      onClick={() => setActiveProductForSpecs(product)}
+                      className="group bg-white rounded-2xl border border-slate-200/80 hover:border-emerald-400 hover:shadow-xl transition-all duration-200 flex flex-col overflow-hidden cursor-pointer relative"
+                    >
+                      {/* Product Image & Badges */}
+                      <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                          {product.badge && (
+                            <span className={`${product.badgeColor || 'bg-emerald-600'} text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider`}>
+                              {product.badge}
+                            </span>
+                          )}
+                          {discountPercent > 0 && (
+                            <span className="bg-amber-400 text-slate-900 text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm">
+                              {discountPercent}% OFF
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Dietary Pill */}
+                        <div className="absolute top-2.5 right-2.5">
+                          <span className="bg-white/90 backdrop-blur-md text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm border border-emerald-100 flex items-center space-x-1">
+                            <span>🌱</span>
+                            <span>{product.dietary}</span>
+                          </span>
+                        </div>
+
+                        {/* Hover Cue */}
+                        <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <span className="bg-white text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+                            <span>👁️</span>
+                            <span>Click to View Specs</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Product Meta */}
+                      <div className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="font-extrabold text-emerald-700 tracking-wide uppercase text-[11px]">
+                              {product.brand}
+                            </span>
+                            <span className="text-slate-400 font-medium">
+                              {product.weight}
+                            </span>
+                          </div>
+
+                          <h3 className="font-bold text-slate-900 text-sm line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
+                            {product.name}
+                          </h3>
+
+                          <div className="flex items-center space-x-1 mt-1.5 text-xs">
+                            <div className="flex items-center text-amber-500">
+                              <span>★</span>
+                              <span className="font-bold text-slate-800 ml-1">{product.rating}</span>
+                            </div>
+                            <span className="text-slate-400">({product.reviewsCount})</span>
+                          </div>
+                        </div>
+
+                        {/* Pricing & Add Stepper */}
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <div>
+                            <div className="flex items-baseline space-x-1.5">
+                              <span className="text-lg font-black text-slate-900">₹{product.price}</span>
+                              {product.originalPrice > product.price && (
+                                <span className="text-xs text-slate-400 line-through">₹{product.originalPrice}</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-400 block font-medium">Inclusive of all taxes</span>
+                          </div>
+
+                          <div onClick={(e) => e.stopPropagation()}>
+                            {qty === 0 ? (
+                              <button
+                                type="button"
+                                onClick={(e) => addToCart(product, e)}
+                                className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white rounded-xl text-xs font-extrabold border border-emerald-200 hover:border-emerald-600 transition flex items-center space-x-1 active:scale-95"
+                              >
+                                <span>+</span>
+                                <span>ADD</span>
+                              </button>
+                            ) : (
+                              <div className="flex items-center bg-emerald-600 text-white rounded-xl p-0.5 shadow-sm">
+                                <button
+                                  type="button"
+                                  onClick={(e) => updateQuantity(product.id, -1, e)}
+                                  className="w-7 h-7 flex items-center justify-center font-black text-sm hover:bg-emerald-700 rounded-lg active:scale-95 transition"
+                                  title="Decrease"
+                                >
+                                  -
+                                </button>
+                                <span className="w-6 text-center text-xs font-black">
+                                  {qty}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => updateQuantity(product.id, 1, e)}
+                                  className="w-7 h-7 flex items-center justify-center font-black text-sm hover:bg-emerald-700 rounded-lg active:scale-95 transition"
+                                  title="Increase"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+
+          {/* FLOATING CART BUTTON FOR MOBILE */}
+          {totalItemsCount > 0 && (
+            <aside aria-label="Floating cart action" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 sm:hidden">
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className="flex items-center space-x-3 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-full shadow-2xl shadow-emerald-700/50 border border-emerald-400 font-extrabold text-sm active:scale-95 transition"
+              >
+                <span>🛒</span>
+                <span>View Cart ({totalItemsCount})</span>
+                <span>•</span>
+                <span>₹{subtotal.toLocaleString()}</span>
+              </button>
+            </aside>
+          )}
+
+          {/* ============================================================== */}
+          {/* PRODUCT SPECIFICATIONS POPUP (Triggered on Item Click)        */}
+          {/* ============================================================== */}
+          {activeProductForSpecs && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+              onClick={() => setActiveProductForSpecs(null)}
+            >
+              <div
+                className="bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto animate-scaleUp"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Specs Header */}
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="bg-emerald-100 text-emerald-800 text-xs font-black px-2.5 py-1 rounded-md uppercase tracking-wide">
+                      {activeProductForSpecs.brand}
+                    </span>
+                    <span className="text-xs text-slate-500 font-medium">Official Product Specification</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveProductForSpecs(null)}
+                    className="w-8 h-8 rounded-full bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-200 flex items-center justify-center text-sm font-bold border border-slate-200 transition"
+                    title="Close specifications"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Specs Body */}
+                <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                  {/* Top Product Summary */}
+                  <div className="flex flex-col sm:flex-row gap-5">
+                    <div className="w-full sm:w-48 h-48 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200 relative">
+                      <img
+                        src={activeProductForSpecs.image}
+                        alt={activeProductForSpecs.name}
+                        className="w-full h-full object-cover"
+                      />
+                      {activeProductForSpecs.badge && (
+                        <span className="absolute top-2 left-2 bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow uppercase">
+                          {activeProductForSpecs.badge}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">{activeProductForSpecs.brand}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-xs text-slate-500 font-medium">{activeProductForSpecs.weight}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-xs text-emerald-600 font-semibold">{activeProductForSpecs.dietary}</span>
+                      </div>
+
+                      <h3 className="text-xl font-extrabold text-slate-900 mt-1 leading-snug">
+                        {activeProductForSpecs.name}
+                      </h3>
+
+                      {/* Rating & Stock */}
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                        <div className="flex items-center bg-amber-50 text-amber-800 px-2 py-0.5 rounded-lg font-bold border border-amber-200">
+                          <span>★ {activeProductForSpecs.rating}</span>
+                          <span className="text-amber-600 font-normal ml-1">({activeProductForSpecs.reviewsCount} reviews)</span>
+                        </div>
+                        <span className="text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg font-semibold border border-emerald-200">
+                          ✓ In Stock ({activeProductForSpecs.stockCount} units on shelf)
+                        </span>
+                      </div>
+
+                      {/* Price box & Cart buttons */}
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="flex items-baseline space-x-2">
+                            <span className="text-2xl font-black text-slate-900">₹{activeProductForSpecs.price}</span>
+                            {activeProductForSpecs.originalPrice > activeProductForSpecs.price && (
+                              <span className="text-sm text-slate-400 line-through">₹{activeProductForSpecs.originalPrice}</span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-emerald-700 font-semibold">
+                            You save ₹{activeProductForSpecs.originalPrice - activeProductForSpecs.price} on this purchase
+                          </span>
+                        </div>
+
+                        {/* Add to cart from modal */}
+                        <div>
+                          {(cart[activeProductForSpecs.id] || 0) > 0 ? (
+                            <div className="flex items-center bg-emerald-600 text-white rounded-xl p-1 shadow">
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(activeProductForSpecs.id, -1)}
+                                className="w-8 h-8 flex items-center justify-center font-black hover:bg-emerald-700 rounded-lg text-sm active:scale-95"
+                              >
+                                -
+                              </button>
+                              <span className="w-8 text-center text-sm font-bold">
+                                {cart[activeProductForSpecs.id]}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(activeProductForSpecs.id, 1)}
+                                className="w-8 h-8 flex items-center justify-center font-black hover:bg-emerald-700 rounded-lg text-sm active:scale-95"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => addToCart(activeProductForSpecs)}
+                              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center space-x-1.5 active:scale-95"
+                            >
+                              <span>🛒</span>
+                              <span>Add to Cart</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">Product Description</h4>
+                    <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      {activeProductForSpecs.specifications.description}
+                    </p>
+                  </div>
+
+                  {/* Nutritional Information Grid */}
+                  <div>
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>Nutritional Facts</span>
+                      <span className="text-slate-500 font-medium lowercase">Per {activeProductForSpecs.specifications.nutrition.servingSize}</span>
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Energy</span>
+                        <span className="font-extrabold text-slate-800 text-sm">{activeProductForSpecs.specifications.nutrition.energy}</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Protein</span>
+                        <span className="font-extrabold text-slate-800 text-sm">{activeProductForSpecs.specifications.nutrition.protein}</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Carbohydrates</span>
+                        <span className="font-extrabold text-slate-800 text-sm">{activeProductForSpecs.specifications.nutrition.carbs}</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Sugars</span>
+                        <span className="font-extrabold text-slate-800 text-sm">{activeProductForSpecs.specifications.nutrition.sugars}</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Fat</span>
+                        <span className="font-extrabold text-slate-800 text-sm">{activeProductForSpecs.specifications.nutrition.fat}</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Sodium</span>
+                        <span className="font-extrabold text-slate-800 text-sm">{activeProductForSpecs.specifications.nutrition.sodium}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key Specifications Grid */}
+                  <div>
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Key Specifications</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">Ingredients</span>
+                        <span className="text-slate-800 font-medium leading-tight mt-0.5 block">{activeProductForSpecs.specifications.ingredients}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">Shelf Life</span>
+                        <span className="text-slate-800 font-semibold mt-0.5 block">{activeProductForSpecs.specifications.shelfLife}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">Storage Instructions</span>
+                        <span className="text-slate-800 font-medium mt-0.5 block">{activeProductForSpecs.specifications.storageInstructions}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">Country of Origin</span>
+                        <span className="text-slate-800 font-semibold mt-0.5 block">{activeProductForSpecs.specifications.countryOfOrigin}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 sm:col-span-2">
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">FSSAI / Safety License & Manufacturer</span>
+                        <span className="text-slate-800 font-medium mt-0.5 block">
+                          Lic: #{activeProductForSpecs.specifications.fssaiLicense} • {activeProductForSpecs.specifications.manufacturer}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Specs Footer */}
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                  <span className="text-xs text-slate-500 font-medium flex items-center space-x-1">
+                    <span>🛡️</span>
+                    <span>100% Genuine Branded Product • FRESHORA Guarantee</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveProductForSpecs(null)}
+                    className="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition"
+                  >
+                    Close Specs
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* CART & SMS CHECKOUT POPUP (Triggered on Cart Icon Click)       */}
+          {/* ============================================================== */}
+          {isCartOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+              onClick={() => setIsCartOpen(false)}
+            >
+              <div
+                className="bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden my-auto animate-scaleUp"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Cart Header */}
+                <div className="px-6 py-4 bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 text-white flex items-center justify-between shadow-sm">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-xl shadow-inner">
+                      🛒
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="text-lg font-black tracking-tight">Your FRESHORA Cart</h3>
+                        <span className="bg-amber-400 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                          In-Store Kiosk
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-100 font-medium">
+                        {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'} selected • Digital SMS Bill Ready
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {cartItems.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearCart}
+                        className="text-xs text-emerald-100 hover:text-white font-bold px-2.5 py-1 rounded-lg hover:bg-white/10 transition"
+                      >
+                        Clear Cart
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsCartOpen(false)}
+                      className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold text-sm transition"
+                      title="Close cart popup"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cart Body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                  {cartItems.length === 0 ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                      <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center text-4xl mb-4 text-slate-300">
+                        🛒
+                      </div>
+                      <h4 className="text-lg font-extrabold text-slate-800">Your cart is currently empty</h4>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                        Browse our aisles of branded groceries, tap <strong>ADD</strong> on items you wish to purchase, and review them here.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsCartOpen(false)}
+                        className="mt-6 px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition"
+                      >
+                        Start Adding Groceries
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Cart Items List */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2.5">
+                          <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                            Selected Items ({totalItemsCount})
+                          </h4>
+                          <span className="text-xs text-emerald-700 font-bold">
+                            Subtotal: ₹{subtotal.toLocaleString()}
+                          </span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {cartItems.map(item => (
+                            <div
+                              key={item.id}
+                              className="flex items-center space-x-3.5 p-3 rounded-2xl border border-slate-200/80 hover:border-emerald-300 bg-slate-50/60 transition"
+                            >
+                              {/* Thumbnail */}
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-16 h-16 object-cover rounded-xl border border-slate-200 shrink-0 bg-white"
+                              />
+
+                              {/* Details */}
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider block">
+                                  {item.brand}
+                                </span>
+                                <h5 className="text-xs font-bold text-slate-900 truncate">
+                                  {item.name}
+                                </h5>
+                                <span className="text-[11px] text-slate-500 block font-medium">
+                                  {item.weight} • ₹{item.price} each
+                                </span>
+                                <span className="text-xs font-black text-slate-900 mt-0.5 block">
+                                  ₹{(item.price * item.quantity).toLocaleString()}
+                                </span>
+                              </div>
+
+                              {/* Quantity Stepper */}
+                              <div className="flex items-center space-x-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.id, -1)}
+                                  className="w-7 h-7 flex items-center justify-center font-black text-slate-700 hover:bg-slate-100 rounded-lg text-sm transition active:scale-95"
+                                  title="Decrease"
+                                >
+                                  -
+                                </button>
+                                <span className="w-6 text-center text-xs font-extrabold text-slate-900">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.id, 1)}
+                                  className="w-7 h-7 flex items-center justify-center font-black text-slate-700 hover:bg-slate-100 rounded-lg text-sm transition active:scale-95"
+                                  title="Increase"
+                                >
+                                  +
+                                </button>
+                              </div>
+
+                              {/* Remove */}
+                              <button
+                                type="button"
+                                onClick={() => removeFromCart(item.id)}
+                                className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition text-sm shrink-0"
+                                title="Remove item"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Eco Bag Option */}
+                      <div className="flex items-center justify-between text-xs bg-emerald-50/80 p-3 rounded-2xl border border-emerald-200/80">
+                        <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={includeBag}
+                            onChange={(e) => setIncludeBag(e.target.checked)}
+                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                          />
+                          <div>
+                            <span className="text-slate-800 font-bold block">Add Eco-Friendly FRESHORA Bag</span>
+                            <span className="text-[11px] text-emerald-700">Biodegradable heavy-duty bag for your groceries</span>
+                          </div>
+                        </label>
+                        <span className="font-extrabold text-slate-800 text-sm">₹10</span>
+                      </div>
+
+                      {/* MANDATORY CUSTOMER DETAILS FOR SMS BILL */}
+                      <div className="bg-gradient-to-br from-amber-50/80 to-emerald-50/50 p-4 sm:p-5 rounded-2xl border-2 border-emerald-300 shadow-sm space-y-3.5">
+                        {/* Notice Banner */}
+                        <div className="flex items-start space-x-2.5 text-xs text-slate-700">
+                          <span className="text-xl shrink-0">📱</span>
+                          <div>
+                            <span className="font-extrabold text-emerald-900 block text-xs uppercase tracking-wide">
+                              Mandatory Customer Details for SMS Bill
+                            </span>
+                            <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                              As per FRESHORA in-store digital billing policy, your <strong>tax invoice</strong>, <strong>itemized receipt</strong>, and <strong>order pickup token</strong> will be sent on SMS to the given phone number mandatorily.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Form Inputs */}
+                        <div className="space-y-3 pt-2">
+                          {/* Full Name */}
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="text-xs font-bold text-slate-800">
+                                Customer Full Name <span className="text-rose-500 font-black">*</span>
+                              </label>
+                              {formTouched.customerName && formErrors.customerName && (
+                                <span className="text-[11px] text-rose-600 font-bold">{formErrors.customerName}</span>
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="e.g. Rahul Sharma"
+                              value={customerName}
+                              onChange={(e) => {
+                                setCustomerName(e.target.value);
+                                if (formErrors.customerName) setFormErrors(prev => ({ ...prev, customerName: null }));
+                              }}
+                              onBlur={() => handleBlur('customerName')}
+                              className={`w-full px-3.5 py-2.5 bg-white text-xs text-slate-900 rounded-xl border focus:outline-none transition ${
+                                formTouched.customerName && formErrors.customerName
+                                  ? 'border-rose-400 bg-rose-50/30 focus:ring-2 focus:ring-rose-500'
+                                  : 'border-slate-300 focus:ring-2 focus:ring-emerald-500'
+                              }`}
+                            />
+                          </div>
+
+                          {/* Phone No */}
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="text-xs font-bold text-slate-800">
+                                Phone Number (For SMS Bill) <span className="text-rose-500 font-black">*</span>
+                              </label>
+                              {formTouched.customerPhone && formErrors.customerPhone && (
+                                <span className="text-[11px] text-rose-600 font-bold">{formErrors.customerPhone}</span>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-bold text-slate-500 pointer-events-none">
+                                🇮🇳 +91
+                              </span>
+                              <input
+                                type="tel"
+                                maxLength="10"
+                                placeholder="10-digit mobile number (e.g. 9876543210)"
+                                value={customerPhone}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/\D/g, '');
+                                  setCustomerPhone(val);
+                                  if (formErrors.customerPhone) setFormErrors(prev => ({ ...prev, customerPhone: null }));
+                                }}
+                                onBlur={() => handleBlur('customerPhone')}
+                                className={`w-full pl-14 pr-3.5 py-2.5 bg-white text-xs text-slate-900 rounded-xl border focus:outline-none transition font-medium tracking-wide ${
+                                  formTouched.customerPhone && formErrors.customerPhone
+                                    ? 'border-rose-400 bg-rose-50/30 focus:ring-2 focus:ring-rose-500'
+                                    : 'border-slate-300 focus:ring-2 focus:ring-emerald-500'
+                                }`}
+                              />
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-1">
+                              ⚡ The bill will be sent on SMS on the given number mandatorily.
+                            </p>
+                          </div>
+
+                          {/* Address */}
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="text-xs font-bold text-slate-800">
+                                Address (Billing / Delivery) <span className="text-rose-500 font-black">*</span>
+                              </label>
+                              {formTouched.customerAddress && formErrors.customerAddress && (
+                                <span className="text-[11px] text-rose-600 font-bold">{formErrors.customerAddress}</span>
+                              )}
+                            </div>
+                            <textarea
+                              rows="2"
+                              placeholder="e.g. Flat 302, Green Meadows Apt, Sector 4, Bangalore"
+                              value={customerAddress}
+                              onChange={(e) => {
+                                setCustomerAddress(e.target.value);
+                                if (formErrors.customerAddress) setFormErrors(prev => ({ ...prev, customerAddress: null }));
+                              }}
+                              onBlur={() => handleBlur('customerAddress')}
+                              className={`w-full px-3.5 py-2 bg-white text-xs text-slate-900 rounded-xl border focus:outline-none transition ${
+                                formTouched.customerAddress && formErrors.customerAddress
+                                  ? 'border-rose-400 bg-rose-50/30 focus:ring-2 focus:ring-rose-500'
+                                  : 'border-slate-300 focus:ring-2 focus:ring-emerald-500'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Price Breakdown */}
+                      <div className="space-y-2 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div className="flex justify-between text-slate-600">
+                          <span>Items Subtotal</span>
+                          <span className="font-bold text-slate-800">₹{subtotal.toLocaleString()}</span>
+                        </div>
+                        {totalSavings > 0 && (
+                          <div className="flex justify-between text-emerald-700 font-bold">
+                            <span>FRESHORA In-Store Savings</span>
+                            <span>- ₹{totalSavings.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {includeBag && (
+                          <div className="flex justify-between text-slate-600">
+                            <span>Carry Bag Fee</span>
+                            <span className="font-bold text-slate-800">₹10</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-slate-500 text-[11px]">
+                          <span>GST (Included in Product Prices)</span>
+                          <span>₹{Math.round(subtotal * 0.05).toLocaleString()}</span>
+                        </div>
+                        <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-sm font-black text-slate-900">
+                          <span>Total Amount Payable</span>
+                          <span className="text-xl text-emerald-700">₹{finalTotal.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Place Order Button */}
+                {cartItems.length > 0 && (
+                  <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={handlePlaceOrder}
+                      disabled={isPlacingOrder || totalItemsCount === 0}
+                      className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/30 text-sm tracking-wide transition flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+                    >
+                      {isPlacingOrder ? (
+                        <>
+                          <span className="animate-spin text-lg">⏳</span>
+                          <span>Transmitting Order & Sending SMS Bill...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>⚡</span>
+                          <span>Place Order • ₹{finalTotal.toLocaleString()}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <p className="text-[11px] text-center text-slate-500 font-medium">
+                      Clicking <strong>Place Order</strong> will immediately transmit your order to the packing bay and trigger your mandatory SMS bill.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* ORDER CONFIRMATION / RECEIPT MODAL (With Simulated SMS Bill)  */}
+          {/* ============================================================== */}
+          {placedOrder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+              <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto animate-scaleUp">
+                {/* Banner */}
+                <div className="bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-700 p-6 text-center text-white relative">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto text-3xl mb-3 shadow-inner">
+                    ✓
+                  </div>
+                  <h3 className="text-2xl font-black tracking-tight">Order Placed Successfully!</h3>
+                  <p className="text-xs text-emerald-100 mt-1 font-medium">
+                    Thank you for shopping at FRESHORA Branded Groceries
+                  </p>
+
+                  {/* Token Display */}
+                  <div className="mt-4 bg-white text-slate-900 py-3 px-6 rounded-2xl shadow-xl inline-block border border-emerald-100">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                      Your In-Store Pickup Token
+                    </span>
+                    <span className="text-2xl font-black text-emerald-700 tracking-wider">
+                      {placedOrder.orderNumber}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto custom-scrollbar">
+                  
+                  {/* SIMULATED SMS BILL NOTIFICATION CARD */}
+                  <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-md border border-slate-700 relative overflow-hidden">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base">💬</span>
+                        <span className="font-bold text-slate-200">SMS Bill Dispatched</span>
+                        <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-1.5 py-0.5 rounded">
+                          MANDATORY SMS SENT
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">Just now</span>
+                    </div>
+
+                    <div className="mt-3 bg-slate-800/80 rounded-xl p-3 border border-slate-700 text-xs space-y-1.5 font-mono">
+                      <div className="text-[11px] text-slate-400 flex justify-between">
+                        <span>Sender: <strong className="text-emerald-400">FRESHORA-BILL</strong></span>
+                        <span>To: <strong className="text-slate-200">+91 {placedOrder.customerPhone}</strong></span>
+                      </div>
+                      <p className="text-slate-100 leading-relaxed text-[11.5px] pt-1">
+                        "Dear <span className="text-emerald-300 font-bold">{placedOrder.customerName}</span>, your FRESHORA grocery order <span className="text-emerald-300 font-bold">{placedOrder.orderNumber}</span> for <span className="text-emerald-300 font-bold">₹{placedOrder.total.toLocaleString()}</span> is confirmed! 
+                        Billing Address: <span className="text-slate-300">{placedOrder.customerAddress}</span>. 
+                        Your digital invoice link: <span className="text-cyan-400 underline">https://freshora.shop/inv/{placedOrder.orderNumber}</span>. 
+                        Please collect at Counter 2 using Token <span className="text-amber-400 font-bold">{placedOrder.orderNumber}</span>. Thank you!"
+                      </p>
+                      <div className="flex items-center space-x-1 text-[10px] text-emerald-400 pt-1">
+                        <span>✓✓</span>
+                        <span>Delivered via SMS to +91 {placedOrder.customerPhone}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* In-Store Counter Info */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start space-x-3 text-xs text-amber-900">
+                    <span className="text-2xl shrink-0">🏪</span>
+                    <div>
+                      <p className="font-extrabold text-sm">Collect at Express Counter 2</p>
+                      <p className="text-amber-800 mt-0.5 leading-relaxed">
+                        Our in-shop bagging team is assembling your branded products. Please approach the collection bay in <strong>3-5 minutes</strong> and present your Token <strong>{placedOrder.orderNumber}</strong> or SMS message.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Customer & Billing Metadata */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] font-bold uppercase">Customer Name</span>
+                      <span className="font-bold text-slate-800">{placedOrder.customerName}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] font-bold uppercase">Mobile (SMS Verified)</span>
+                      <span className="font-bold text-slate-800">+91 {placedOrder.customerPhone}</span>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span className="text-slate-400 block text-[10px] font-bold uppercase">Billing / Delivery Address</span>
+                      <span className="font-medium text-slate-800 block mt-0.5">{placedOrder.customerAddress}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] font-bold uppercase">Order Time</span>
+                      <span className="font-bold text-slate-800">{placedOrder.timestamp}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] font-bold uppercase">Kiosk Station</span>
+                      <span className="font-bold text-slate-800">{placedOrder.kioskId}</span>
+                    </div>
+                  </div>
+
+                  {/* Itemized Breakdown */}
+                  <div>
+                    <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">
+                      Itemized Grocery Breakdown ({placedOrder.items.reduce((s, i) => s + i.quantity, 0)} items)
+                    </h5>
+                    <div className="divide-y divide-slate-100 text-xs border border-slate-200 rounded-2xl p-3 bg-white">
+                      {placedOrder.items.map(item => (
+                        <div key={item.id} className="py-2.5 flex justify-between items-center first:pt-0 last:pb-0">
+                          <div className="flex-1 pr-3">
+                            <span className="text-[10px] font-bold text-emerald-700 uppercase block">{item.brand}</span>
+                            <span className="font-bold text-slate-800 block leading-tight">{item.name}</span>
+                            <span className="text-slate-400 text-[10px]">{item.weight} • Qty: {item.quantity} × ₹{item.price}</span>
+                          </div>
+                          <span className="font-black text-slate-900 text-sm">
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Pricing Total Summary */}
+                  <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div className="flex justify-between">
+                      <span>Items Subtotal</span>
+                      <span className="font-bold text-slate-800">₹{placedOrder.subtotal.toLocaleString()}</span>
+                    </div>
+                    {placedOrder.totalSavings > 0 && (
+                      <div className="flex justify-between text-emerald-700 font-bold">
+                        <span>In-Store Savings Discount</span>
+                        <span>- ₹{placedOrder.totalSavings.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {placedOrder.bagFee > 0 && (
+                      <div className="flex justify-between">
+                        <span>Eco-Friendly Bag</span>
+                        <span className="font-bold text-slate-800">₹{placedOrder.bagFee}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-slate-400 text-[11px]">
+                      <span>Taxes (GST Included)</span>
+                      <span>₹{Math.round(placedOrder.subtotal * 0.05).toLocaleString()}</span>
+                    </div>
+                    <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-sm font-black text-slate-900">
+                      <span>Total Paid</span>
+                      <span className="text-xl text-emerald-700">₹{placedOrder.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="flex-1 py-3 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1.5 shadow-sm"
+                  >
+                    <span>🖨️</span>
+                    <span>Print Tax Invoice</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPlacedOrder(null)}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center space-x-1.5"
+                  >
+                    <span>🛍️</span>
+                    <span>Place Another Order</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STORE FOOTER */}
+          <footer className="bg-white border-t border-slate-200 py-6 px-4 text-center text-xs text-slate-500 mt-auto">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-slate-900">FRESHORA Supermarket</span>
+                <span>• In-Store Customer Self-Ordering System</span>
+              </div>
+              <div className="flex items-center space-x-4 text-slate-400">
+                <span>Fast & Digital Billing</span>
+                <span>•</span>
+                <span>100% Genuine Branded Groceries</span>
+                <span>•</span>
+                <span>Customer Desk: Ext. 101</span>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<FreshoraApp />);
+  </script>
+</body>
+</html>
